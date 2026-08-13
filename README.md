@@ -1,7 +1,7 @@
 
 # 🤖 AI Research Assistant
 
-A simple RAG-based application that lets users upload PDF documents and ask questions about their content.
+A simple RAG based application that lets users upload PDF documents and ask questions about their content.
 
 ## Features
 
@@ -9,14 +9,21 @@ A simple RAG-based application that lets users upload PDF documents and ask ques
 - Text chunking
 - Semantic embeddings
 - FAISS similarity search
-- Qwen LLM-based answers
+- Qwen LLM based answers
 - Streamlit interface
 
 ## RAG Pipeline
 
-PDF → Text Extraction → Chunking → Embeddings → FAISS → Context Retrieval → Qwen LLM → Answer
+PDF
+Text Extraction
+Chunking
+Embeddings
+FAISS
+Context Retrieval
+Qwen LLM
+Answer
 
-## Technologies
+## Tech
 
 - Python
 - Streamlit
@@ -31,15 +38,6 @@ PDF → Text Extraction → Chunking → Embeddings → FAISS → Context Retrie
 **Embedding:** `sentence-transformers/all-MiniLM-L6-v2`
 
 **LLM:** `Qwen/Qwen2.5-0.5B-Instruct`
-
-## How It Works
-
-1. Upload a PDF.
-2. Extract and split the text.
-3. Generate embeddings and store them in FAISS.
-4. Ask a question.
-5. Retrieve relevant content.
-6. Generate an answer using Qwen.
 
 ## Purpose
 
