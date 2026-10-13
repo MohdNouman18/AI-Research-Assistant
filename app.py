@@ -1,11 +1,13 @@
 import streamlit as st
 import faiss
 import re
+import numpy as np
 from pathlib import Path
 
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
 
 
 # ---------------- PAGE CONFIG ----------------
@@ -16,7 +18,7 @@ st.set_page_config(
 )
 
 
-# ---------------- LOAD CUSTOM CSS ----------------
+# ---------------- LOAD CSS ----------------
 def load_css(file_name: str):
     css_path = Path(__file__).parent / file_name
     if css_path.exists():
@@ -42,7 +44,7 @@ st.markdown(
 )
 
 
-# ---------------- LOAD MODELS ----------------
+# ---------------- LOAD EMBEDDING MODEL ----------------
 @st.cache_resource
 def load_embedding_model():
     model = SentenceTransformer(
@@ -51,20 +53,27 @@ def load_embedding_model():
     return model
 
 
+# ---------------- LOAD LLM (PROPER CHAT MODEL) ----------------
 @st.cache_resource
 def load_llm():
-    model = pipeline(
-        "text-generation",
-        model="Qwen/Qwen2.5-0.5B-Instruct"
+    model_name = "Qwen/Qwen2.5-0.5B-Instruct"
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        torch_dtype=torch.float32,
+        device_map="cpu"
     )
-    return model
+
+    return tokenizer, model
 
 
 embedding_model = load_embedding_model()
-generator = load_llm()
+tokenizer, llm_model = load_llm()
 
 
-# ---------------- PDF PROCESSING ----------------
+# ---------------- PDF PROCESSING (BETTER CHUNKING) ----------------
 def process_pdf(uploaded_file):
     reader = PdfReader(uploaded_file)
     text = ""
@@ -74,11 +83,22 @@ def process_pdf(uploaded_file):
         if page_text:
             text += page_text + "\n"
 
+    # Clean whitespace
     text = text.replace("\n", " ")
     text = " ".join(text.split())
 
-    chunks = re.split(r'(?=\d+\.\s)', text)
-    chunks = [chunk.strip() for chunk in chunks if chunk.strip()]
+    # Split into ~600 character chunks with 100 char overlap
+    chunk_size = 600
+    overlap = 100
+    chunks = []
+
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        start = end - overlap
 
     return chunks
 
@@ -86,24 +106,30 @@ def process_pdf(uploaded_file):
 def create_index(chunks):
     embeddings = embedding_model.encode(
         chunks,
-        convert_to_numpy=True
+        convert_to_numpy=True,
+        normalize_embeddings=True   # normalize for cosine-like behavior
     ).astype("float32")
 
     dimension = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dimension)
+
+    # Inner product on normalized vectors = cosine similarity
+    index = faiss.IndexFlatIP(dimension)
     index.add(embeddings)
 
     return index
 
 
-# ---------------- RAG ----------------
+# ---------------- RAG (FIXED) ----------------
 def ask_rag(question, chunks, index):
+    # Encode query (normalized)
     question_embedding = embedding_model.encode(
         [question],
-        convert_to_numpy=True
+        convert_to_numpy=True,
+        normalize_embeddings=True
     ).astype("float32")
 
-    k = min(2, len(chunks))
+    # Retrieve more chunks
+    k = min(4, len(chunks))
 
     distances, indices = index.search(question_embedding, k)
 
@@ -111,35 +137,50 @@ def ask_rag(question, chunks, index):
 
     context = "\n\n".join(retrieved_chunks)
 
-    prompt = f"""
-Answer the question using ONLY the context below.
+    # ---------- Use proper chat template ----------
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a helpful assistant. "
+                "Answer the user's question using ONLY the provided context. "
+                "If the answer is not in the context, say "
+                "'The answer is not available in the document.' "
+                "Be concise and direct."
+            )
+        },
+        {
+            "role": "user",
+            "content": f"Context:\n{context}\n\nQuestion: {question}"
+        }
+    ]
 
-Context:
-{context}
-
-Question:
-{question}
-
-Answer:
-"""
-
-    result = generator(
-        prompt,
-        max_new_tokens=100,
-        do_sample=False,
-        return_full_text=False
+    prompt = tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True
     )
 
-    answer = result[0]["generated_text"]
+    inputs = tokenizer(prompt, return_tensors="pt")
+
+    with torch.no_grad():
+        outputs = llm_model.generate(
+            **inputs,
+            max_new_tokens=256,          # enough length
+            do_sample=False,             # deterministic
+            repetition_penalty=1.15,     # avoid loops
+            pad_token_id=tokenizer.eos_token_id
+        )
+
+    # Only take NEW tokens
+    generated_ids = outputs[0][inputs["input_ids"].shape[1]:]
+    answer = tokenizer.decode(generated_ids, skip_special_tokens=True)
 
     return answer.strip(), retrieved_chunks
 
 
 # ---------------- UI ----------------
-uploaded_file = st.file_uploader(
-    "Upload your PDF",
-    type=["pdf"]
-)
+uploaded_file = st.file_uploader("Upload your PDF", type=["pdf"])
 
 
 if uploaded_file:
@@ -161,9 +202,7 @@ if uploaded_file:
         f"{len(st.session_state.chunks)} chunks created."
     )
 
-    question = st.text_input(
-        "Ask a question about your PDF:"
-    )
+    question = st.text_input("Ask a question about your PDF:")
 
     if st.button("Ask"):
         if question:
@@ -178,7 +217,6 @@ if uploaded_file:
             st.write(answer)
 
             st.subheader("Retrieved Context")
-
             for i, source in enumerate(sources):
                 with st.expander(f"Source {i + 1}"):
                     st.write(source)
