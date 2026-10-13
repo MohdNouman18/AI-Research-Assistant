@@ -1,78 +1,142 @@
 /* ============================================
-   AI Research Assistant — Custom Styles
+   AI Research Assistant — Modern UI
+   Created by Muhammad Nouman
    ============================================ */
 
-/* ---------- Google Font ---------- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ---------- Global ---------- */
+/* ---------- Global Reset ---------- */
 html, body, [class*="css"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* ---------- Animated Gradient Background ---------- */
 .stApp {
-    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-    background-attachment: fixed;
+    background: linear-gradient(-45deg,
+        #0f0c29,
+        #1a1a4e,
+        #24243e,
+        #2d1b4e,
+        #0f0c29);
+    background-size: 400% 400%;
+    animation: gradientFlow 18s ease infinite;
     color: #e6e6f0;
 }
 
-/* ---------- Hide Streamlit branding ---------- */
+@keyframes gradientFlow {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ---------- Hide Streamlit chrome ---------- */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
 
 /* ---------- Main container ---------- */
 .block-container {
-    padding-top: 2rem !important;
-    padding-bottom: 3rem !important;
-    max-width: 1100px;
+    padding-top: 1.5rem !important;
+    padding-bottom: 4rem !important;
+    max-width: 1050px;
 }
 
-/* ---------- Title ---------- */
-h1 {
-    font-size: 2.8rem !important;
-    font-weight: 700 !important;
-    background: linear-gradient(90deg, #a78bfa 0%, #60a5fa 50%, #34d399 100%);
+/* ---------- Hero Header ---------- */
+.hero {
+    text-align: center;
+    padding: 2.5rem 1rem 2rem 1rem;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #a78bfa, transparent);
+    border-radius: 3px;
+    animation: pulseLine 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseLine {
+    0%, 100% { opacity: 0.3; width: 120px; }
+    50%      { opacity: 1;   width: 220px; }
+}
+
+.hero-title {
+    font-size: 3rem !important;
+    font-weight: 800 !important;
+    background: linear-gradient(90deg,
+        #a78bfa 0%,
+        #60a5fa 40%,
+        #34d399 70%,
+        #a78bfa 100%);
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-align: center;
-    margin-bottom: 0.5rem !important;
-    letter-spacing: -0.5px;
-    animation: fadeInDown 0.8s ease-out;
+    animation: shineText 4s linear infinite;
+    letter-spacing: -1px;
+    margin-bottom: 0.75rem !important;
+    line-height: 1.15;
 }
 
-/* Subtitle text under title */
-.stApp > div:first-child p {
-    text-align: center;
+@keyframes shineText {
+    to { background-position: 200% center; }
+}
+
+.hero-subtitle {
     color: #b8b8d1;
     font-size: 1.05rem;
-    margin-bottom: 2rem;
+    font-weight: 400;
+    margin: 0;
+    letter-spacing: 0.3px;
 }
 
-/* ---------- Section headings (h2, h3) ---------- */
-h2, h3 {
+.hero-credit {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #a78bfa;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+/* ---------- Section headings ---------- */
+h2 {
     color: #e6e6f0 !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
+    font-size: 1.35rem !important;
+    padding-left: 14px;
     border-left: 4px solid #a78bfa;
-    padding-left: 12px;
-    margin-top: 1.5rem !important;
+    margin-top: 2rem !important;
+    margin-bottom: 1rem !important;
+    letter-spacing: -0.3px;
 }
 
 /* ---------- File Uploader ---------- */
 [data-testid="stFileUploader"] {
     background: rgba(255, 255, 255, 0.04);
-    border: 2px dashed rgba(167, 139, 250, 0.4);
-    border-radius: 16px;
+    border: 2px dashed rgba(167, 139, 250, 0.45);
+    border-radius: 18px;
     padding: 1.5rem;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
+    transition: all 0.35s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 [data-testid="stFileUploader"]:hover {
     border-color: #a78bfa;
-    background: rgba(167, 139, 250, 0.08);
-    box-shadow: 0 0 25px rgba(167, 139, 250, 0.25);
+    background: rgba(167, 139, 250, 0.09);
+    box-shadow:
+        0 0 30px rgba(167, 139, 250, 0.3),
+        inset 0 0 20px rgba(167, 139, 250, 0.05);
+    transform: translateY(-2px);
 }
 
 [data-testid="stFileUploader"] section {
@@ -82,23 +146,28 @@ h2, h3 {
 [data-testid="stFileUploader"] label {
     color: #e6e6f0 !important;
     font-weight: 500;
+    font-size: 1rem;
 }
 
 /* ---------- Text Input ---------- */
 .stTextInput > div > div > input {
     background: rgba(255, 255, 255, 0.06) !important;
-    border: 1.5px solid rgba(167, 139, 250, 0.3) !important;
-    border-radius: 12px !important;
+    border: 1.5px solid rgba(167, 139, 250, 0.35) !important;
+    border-radius: 14px !important;
     color: #e6e6f0 !important;
-    padding: 14px 18px !important;
+    padding: 15px 20px !important;
     font-size: 1rem !important;
-    transition: all 0.25s ease;
+    transition: all 0.3s ease;
+    caret-color: #a78bfa;
 }
 
 .stTextInput > div > div > input:focus {
     border-color: #a78bfa !important;
-    box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.18) !important;
+    box-shadow:
+        0 0 0 4px rgba(167, 139, 250, 0.18),
+        0 0 20px rgba(167, 139, 250, 0.25) !important;
     background: rgba(255, 255, 255, 0.09) !important;
+    transform: translateY(-1px);
 }
 
 .stTextInput > div > div > input::placeholder {
@@ -113,88 +182,111 @@ h2, h3 {
 
 /* ---------- Buttons ---------- */
 .stButton > button {
+    position: relative;
     background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%);
     color: #ffffff !important;
     border: none !important;
-    border-radius: 12px !important;
-    padding: 12px 32px !important;
+    border-radius: 14px !important;
+    padding: 14px 36px !important;
     font-weight: 600 !important;
     font-size: 1rem !important;
-    letter-spacing: 0.3px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(167, 139, 250, 0.35);
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 18px rgba(167, 139, 250, 0.4);
     width: 100%;
+    overflow: hidden;
+}
+
+.stButton > button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.25),
+        transparent);
+    transition: left 0.6s ease;
 }
 
 .stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(167, 139, 250, 0.55);
+    transform: translateY(-3px);
+    box-shadow:
+        0 10px 30px rgba(167, 139, 250, 0.6),
+        0 0 40px rgba(96, 165, 250, 0.3);
     background: linear-gradient(135deg, #b89cff 0%, #7bb4ff 100%);
 }
 
-.stButton > button:active {
-    transform: translateY(0);
+.stButton > button:hover::before {
+    left: 100%;
 }
 
-/* ---------- Alerts (success / warning / info) ---------- */
-.stAlert {
-    border-radius: 12px !important;
+.stButton > button:active {
+    transform: translateY(-1px);
+}
+
+/* ---------- Alerts ---------- */
+div[data-testid="stAlertContainer"] {
+    border-radius: 14px !important;
     border: none !important;
     backdrop-filter: blur(10px);
+    animation: slideIn 0.4s ease-out;
 }
 
-div[data-testid="stAlertContainer"] {
-    border-radius: 12px !important;
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Success message */
 .stSuccess {
     background: rgba(52, 211, 153, 0.12) !important;
     border-left: 4px solid #34d399 !important;
     color: #a7f3d0 !important;
 }
 
-/* Warning message */
 .stWarning {
     background: rgba(251, 191, 36, 0.12) !important;
     border-left: 4px solid #fbbf24 !important;
     color: #fde68a !important;
 }
 
-/* ---------- Expander (Source cards) ---------- */
-.streamlit-expanderHeader,
-[data-testid="stExpander"] summary {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-radius: 10px !important;
-    border: 1px solid rgba(167, 139, 250, 0.2) !important;
-    color: #e6e6f0 !important;
-    font-weight: 500 !important;
-    padding: 12px 16px !important;
-    transition: all 0.25s ease;
-}
-
-[data-testid="stExpander"] summary:hover {
-    background: rgba(167, 139, 250, 0.12) !important;
-    border-color: rgba(167, 139, 250, 0.5) !important;
-}
-
+/* ---------- Expander ---------- */
 [data-testid="stExpander"] {
     border: none !important;
     background: transparent !important;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+[data-testid="stExpander"] summary {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(167, 139, 250, 0.25) !important;
+    color: #e6e6f0 !important;
+    font-weight: 500 !important;
+    padding: 14px 18px !important;
+    transition: all 0.3s ease;
+}
+
+[data-testid="stExpander"] summary:hover {
+    background: rgba(167, 139, 250, 0.14) !important;
+    border-color: rgba(167, 139, 250, 0.6) !important;
+    transform: translateX(4px);
 }
 
 [data-testid="stExpander"] > div {
     background: rgba(255, 255, 255, 0.03) !important;
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 12px 12px;
     border: 1px solid rgba(167, 139, 250, 0.15);
     border-top: none;
+    padding: 14px 18px !important;
 }
 
 /* ---------- Answer text ---------- */
 .stMarkdown p {
     color: #dcdcf0;
-    line-height: 1.7;
+    line-height: 1.75;
     font-size: 1.02rem;
 }
 
@@ -216,44 +308,71 @@ div[data-testid="stAlertContainer"] {
 ::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, #a78bfa, #60a5fa);
     border-radius: 10px;
+    transition: background 0.3s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(180deg, #b89cff, #7bb4ff);
 }
 
-/* ---------- Animations ---------- */
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* ---------- Footer (Hugging Face credit) ---------- */
+.footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(167, 139, 250, 0.15);
+    text-align: left;
+}
+
+.footer-credit {
+    font-size: 0.75rem;
+    color: #8a8aa3;
+    font-weight: 400;
+    letter-spacing: 0.4px;
+    margin: 0;
+    opacity: 0.85;
+    transition: opacity 0.3s ease;
+}
+
+.footer-credit:hover {
+    opacity: 1;
+}
+
+.model-name {
+    color: #a78bfa;
+    font-weight: 600;
+    padding: 2px 8px;
+    background: rgba(167, 139, 250, 0.12);
+    border-radius: 6px;
+    margin-left: 4px;
+    font-size: 0.72rem;
+}
+
+/* ---------- Fade-in animation ---------- */
+.block-container > div {
+    animation: fadeIn 0.6s ease-out;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* Fade-in for main content */
-.block-container > div {
-    animation: fadeIn 0.5s ease-out;
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
-    h1 {
-        font-size: 2rem !important;
+    .hero-title {
+        font-size: 2.1rem !important;
+    }
+    .hero-subtitle {
+        font-size: 0.95rem;
+    }
+    .hero-credit {
+        font-size: 0.75rem;
     }
     .block-container {
         padding-left: 1rem !important;
         padding-right: 1rem !important;
     }
     .stButton > button {
-        padding: 10px 20px !important;
+        padding: 12px 24px !important;
     }
 }
