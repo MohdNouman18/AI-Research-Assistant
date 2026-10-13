@@ -53,7 +53,7 @@ def load_embedding_model():
     return model
 
 
-# ---------------- LOAD LLM (PROPER CHAT MODEL) ----------------
+# ---------------- LOAD LLM (CPU, NO device_map) ----------------
 @st.cache_resource
 def load_llm():
     model_name = "Qwen/Qwen2.5-0.5B-Instruct"
@@ -62,9 +62,10 @@ def load_llm():
 
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        torch_dtype=torch.float32,
-        device_map="cpu"
+        torch_dtype=torch.float32
     )
+
+    model.eval()
 
     return tokenizer, model
 
@@ -73,7 +74,7 @@ embedding_model = load_embedding_model()
 tokenizer, llm_model = load_llm()
 
 
-# ---------------- PDF PROCESSING (BETTER CHUNKING) ----------------
+# ---------------- PDF PROCESSING ----------------
 def process_pdf(uploaded_file):
     reader = PdfReader(uploaded_file)
     text = ""
@@ -107,7 +108,7 @@ def create_index(chunks):
     embeddings = embedding_model.encode(
         chunks,
         convert_to_numpy=True,
-        normalize_embeddings=True   # normalize for cosine-like behavior
+        normalize_embeddings=True
     ).astype("float32")
 
     dimension = embeddings.shape[1]
@@ -119,7 +120,7 @@ def create_index(chunks):
     return index
 
 
-# ---------------- RAG (FIXED) ----------------
+# ---------------- RAG ----------------
 def ask_rag(question, chunks, index):
     # Encode query (normalized)
     question_embedding = embedding_model.encode(
@@ -128,7 +129,7 @@ def ask_rag(question, chunks, index):
         normalize_embeddings=True
     ).astype("float32")
 
-    # Retrieve more chunks
+    # Retrieve top-k chunks
     k = min(4, len(chunks))
 
     distances, indices = index.search(question_embedding, k)
@@ -137,7 +138,7 @@ def ask_rag(question, chunks, index):
 
     context = "\n\n".join(retrieved_chunks)
 
-    # ---------- Use proper chat template ----------
+    # ---------- Proper chat template ----------
     messages = [
         {
             "role": "system",
@@ -166,13 +167,13 @@ def ask_rag(question, chunks, index):
     with torch.no_grad():
         outputs = llm_model.generate(
             **inputs,
-            max_new_tokens=256,          # enough length
-            do_sample=False,             # deterministic
-            repetition_penalty=1.15,     # avoid loops
+            max_new_tokens=256,
+            do_sample=False,
+            repetition_penalty=1.15,
             pad_token_id=tokenizer.eos_token_id
         )
 
-    # Only take NEW tokens
+    # Only take NEW tokens (skip prompt)
     generated_ids = outputs[0][inputs["input_ids"].shape[1]:]
     answer = tokenizer.decode(generated_ids, skip_special_tokens=True)
 
